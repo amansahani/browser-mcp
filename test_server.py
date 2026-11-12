@@ -18,7 +18,7 @@ async def main():
     print()
     print("✅ Server is ready. Run it with:")
     print("   python server.py                   # stdio (for MCP clients)")
-    print("   python server.py --transport sse    # HTTP SSE transport")
+    print("   python server.py --transport sse --port 8000   # HTTP SSE transport")
 
 
 if __name__ == "__main__":

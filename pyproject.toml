@@ -1,8 +1,21 @@
 [project]
 name = "browser-mcp"
-version = "0.1.0"
+version = "0.2.0"
 description = "Playwright-powered MCP server for AI-agent web browsing and search"
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "amansahani" }]
+keywords = ["mcp", "model-context-protocol", "browser", "playwright", "web", "agents", "llm"]
 requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+]
 dependencies = [
     "mcp>=1.0,<2",
     "playwright>=1.62,<1.63",
@@ -11,8 +24,12 @@ dependencies = [
     "playwright-stealth>=2.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/amansahani/browser-mcp"
+Repository = "https://github.com/amansahani/browser-mcp"
+
 [tool.setuptools]
 py-modules = ["server"]
 
 [project.scripts]
-browser-mcp = "server:mcp.run"
+browser-mcp = "server:main"

@@ -1,90 +1,84 @@
 # Browser MCP Server
 
-A **Playwright-powered MCP (Model Context Protocol) server** that exposes browser automation tools for AI agents to browse and search the internet.
+A **Playwright-powered MCP (Model Context Protocol) server** that gives AI agents a real headless browser — web search, page reading, clicks, form filling and screenshots — over MCP (`stdio` by default).
 
-## Features
+Ships with an **agent-ready skill** (`skills/browser-mcp/SKILL.md`) so agents know when and how to use it.
 
-| Tool | Description |
-|---|---|
-| `web_search` | Search: Brave (API if key set, else free headless SERP) → Google headless → Marginalia, plus arXiv + OpenAlex papers — `source`: `auto`, `brave`, `google`, `web`, `papers` |
-| `navigate` | Open a URL and get the page content as Markdown |
-| `click` | Click an element by CSS selector |
-| `fill` | Fill a form field by CSS selector |
-| `screenshot` | Capture the current page as a base64 PNG |
-| `extract_text` | Extract all visible text from the page |
-| `get_page_snapshot` | Get the accessibility tree (structured page view) |
-| `evaluate_js` | Run JavaScript in the page context |
-| `go_back` | Navigate back in history |
-| `get_current_url` | Get the current URL and title |
-
-> **Why no Google/Bing/DDG scrape?** Many networks' egress is bot-flagged — Bing serves spam/ads and DuckDuckGo returns HTTP 202 + CAPTCHA to any client there (IP-reputation based, independent of UA). `web_search` therefore chains **Brave Search** first — via the official API when `~/.browser-mcp/brave_api_key` (or `$BRAVE_API_KEY`, mode 600) exists, **otherwise via the free headless SERP in the bundled Chromium** (one "Verify" click per browser session, performed by the page's own JS) — then **Google headless** (intermittent; trips "unusual traffic" if hit repeatedly), then **Marginalia** (independent index, text-browser HTML), plus **arXiv's official API** and **OpenAlex** for academic papers (no keys). `source`: `auto` (Brave→Google→Marginalia + arXiv + OpenAlex), `brave`, `google`, `web`, `papers`. Rate-limit your calls — don't run search in a loop.
-
-## Quick Start
+## Install (one command)
 
 ```bash
-# Dedicated virtual environment (mcp 1.x API; the server pins mcp<2)
+./scripts/setup.sh
+```
+
+This creates `.venv`, installs the package + Chromium, installs the skill into any detected agent skills directory (OpenCode, Claude Code), and prints ready-to-paste MCP config snippets for your agent.
+
+Prefer to do it by hand?
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e .
-playwright install chromium   # only if needed; cache at ~/.cache/ms-playwright
-
-# Run the server (stdio transport — for MCP clients)
-python server.py
-
-# Or run with SSE transport for HTTP access
-python server.py --transport sse --port 8000
+playwright install chromium   # one-time; cache at ~/.cache/ms-playwright
 ```
 
-## Client Configuration
+## Add it to your agent
 
-### OpenCode
+After install, the `browser-mcp` binary is at `<project>/.venv/bin/browser-mcp`.
+Or skip a venv entirely: `pipx install .` puts `browser-mcp` on your `PATH`.
 
-Register the server globally so OpenCode launches it automatically over stdio —
-no manual start. Add this to your OpenCode config:
+| Agent | Command / config |
+|---|---|
+| **OpenCode** | Add to `~/.config/opencode/opencode.json`:<br>```jsonc<br>{ "mcp": { "servers": { "browser": {<br>  "type": "local",<br>  "command": ["/absolute/path/.venv/bin/browser-mcp"],<br>  "disabled": false<br>} } } }<br>```<br>then check `opencode mcp list` → `✓ browser connected` |
+| **Claude Code** | `claude mcp add browser -- /absolute/path/.venv/bin/browser-mcp`<br>or add to `~/.claude.json` → `mcpServers` |
+| **Claude Desktop** | `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):<br>```json<br>{ "mcpServers": { "browser": { "command": "/absolute/path/.venv/bin/browser-mcp" } } }<br>``` |
+| **Cursor / VS Code** | `.cursor/mcp.json` or `.vscode/mcp.json`:<br>```json<br>{ "servers": { "browser": { "command": "/absolute/path/.venv/bin/browser-mcp" } } }<br>``` |
+| **Any MCP client** | Point it at the `browser-mcp` binary, transport `stdio` |
 
-```jsonc
-{
-  "mcp": {
-    "servers": {
-      "browser": {
-        "type": "local",
-        "command": ["/absolute/path/to/browser_mcp/.venv/bin/python", "/absolute/path/to/browser_mcp/server.py"],
-        "cwd": "/absolute/path/to/browser_mcp",
-        "disabled": false
-      }
-    }
-  }
-}
-```
+Private GitHub repo? `pip install git+https://github.com/amansahani/browser-mcp.git` works once you've authenticated git (e.g. `gh auth setup-git`) — or just clone and `./scripts/setup.sh`.
 
-Verify with `opencode mcp list` → `✓ browser connected`.
+## Add the skill
 
-### Generic JSON MCP client
-
-```json
-{
-  "mcpServers": {
-    "browser": {
-      "command": "/absolute/path/to/browser_mcp/.venv/bin/python",
-      "args": ["/absolute/path/to/browser_mcp/server.py"]
-    }
-  }
-}
-```
-
-### FastMCP CLI
+The skill tells agents *when* to load the browser tools and how to use them well.
 
 ```bash
-fastmcp run server.py
+# automatic (if the agent dir exists) — what scripts/setup.sh does:
+mkdir -p ~/.config/opencode/skills/browser-mcp && cp skills/browser-mcp/SKILL.md ~/.config/opencode/skills/browser-mcp/
+mkdir -p ~/.claude/skills/browser-mcp         && cp skills/browser-mcp/SKILL.md ~/.claude/skills/browser-mcp/
 ```
+
+Or copy `skills/browser-mcp/` into whatever skills directory your agent uses — it's a plain Markdown file with frontmatter (`name`, `description`).
+
+## Tools
+
+| Tool | Description |
+|---|---|
+| `web_search` | Search: Brave (API if key set in `~/.browser-mcp/brave_api_key`, else free headless SERP) → Google headless → Marginalia, plus arXiv + OpenAlex papers. `source`: `auto`, `brave`, `google`, `web`, `papers` |
+| `navigate` | Open a URL, page content as Markdown (~15k chars) |
+| `click` | Click a CSS selector |
+| `fill` | Type into a form field by CSS selector |
+| `screenshot` | Viewport PNG as base64 |
+| `extract_text` | All visible text on the current page |
+| `get_page_snapshot` | Accessibility tree (token-efficient structured view) |
+| `evaluate_js` | Arbitrary JavaScript in page context |
+| `go_back` | History back |
+| `get_current_url` | Current URL + title |
+
+> **Why no Google/Bing/DDG scrape?** Many networks' egress is bot-flagged — Bing serves spam/ads and DuckDuckGo returns HTTP 202 + CAPTCHA there (IP-reputation based, independent of UA). `web_search` chains **Brave Search** first — via the official API when `~/.browser-mcp/brave_api_key` (or `$BRAVE_API_KEY`, mode 600) exists, otherwise via the free headless SERP (one "Verify" click per browser session, done by the page's own JS) — then **Google headless** (intermittent; trips "unusual traffic" if hit repeatedly), then **Marginalia** (independent index), plus **arXiv's API** and **OpenAlex** for academic papers (no keys). Don't run search in a tight loop.
 
 ## Architecture
 
-- **Transport:** stdio (default) or SSE
-- **Browser:** Headless Chromium via Playwright
-- **Lifespan:** A single browser instance is shared across all tool calls for efficiency
-- **Content format:** HTML is converted to Markdown for LLM-friendly output; pages are truncated to ~15k chars
+- **Transport:** stdio (default) or `--transport sse` / `--transport streamable-http` (see `--help`)
+- **Browser:** headless Chromium via Playwright; one shared browser + page across all tool calls
+- **Content format:** HTML → Markdown for agents; pages truncate at ~15k chars
+
+## Development
+
+```bash
+pip install -e .
+python test_server.py     # smoke test — lists registered tools
+python server.py --help   # CLI: --transport stdio|sse|streamable-http [--host H] [--port N]
+```
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).

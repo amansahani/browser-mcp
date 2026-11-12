@@ -626,5 +626,36 @@ async def get_current_url(ctx: Context) -> str:
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Browser MCP — Playwright-powered browser automation for AI agents."
+    )
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "sse", "streamable-http"],
+        default="stdio",
+        help="Transport to serve (default: stdio, which is what MCP clients expect).",
+    )
+    parser.add_argument(
+        "--host",
+        default=None,
+        help="Bind host for HTTP transports (default: 127.0.0.1).",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=None,
+        help="Bind port for HTTP transports (default: 8000).",
+    )
+    args = parser.parse_args()
+    if args.host is not None:
+        mcp.settings.host = args.host
+    if args.port is not None:
+        mcp.settings.port = args.port
+    mcp.run(transport=args.transport)
+
+
 if __name__ == "__main__":
-    mcp.run()
+    main()

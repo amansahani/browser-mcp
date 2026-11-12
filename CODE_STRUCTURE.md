@@ -8,8 +8,10 @@ Architecture and code layout of the Browser MCP server.
 browser_mcp/
 ├── server.py           # MCP server — all tools and search backends live here
 ├── test_server.py      # Smoke test — lists registered tools
+├── skills/browser-mcp/SKILL.md  # Agent skill — when/how to use the tools
+├── scripts/setup.sh    # One-command installer (venv, deps, Chromium, skill)
 ├── pyproject.toml      # Metadata, dependencies, console script entry point
-└── README.md           # Usage & client configuration
+└── README.md           # Install + per-agent MCP registration
 ```
 
 Single-file design by intention: deployment is one command (`python server.py`) and the whole system is readable in one sitting.
@@ -25,7 +27,7 @@ Lifespan manager        one shared Chromium across all tool calls
 FastMCP instance        "BrowserMCP", instructions for connected clients
 HTTP/search backends    plain-HTTP helpers + Brave/Google/Marginalia/arXiv/OpenAlex
 Tool definitions        10 MCP tools
-Entry point             `mcp.run()` — stdio by default, SSE optionally
+Entry point             `main()` — argparse (--transport stdio|sse|streamable-http, --host, --port)
 ```
 
 ### Browser lifespan
