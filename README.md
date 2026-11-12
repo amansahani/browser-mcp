@@ -34,7 +34,7 @@ Or skip a venv entirely: `pipx install .` puts `browser-mcp` on your `PATH`.
 | **Cursor / VS Code** | `.cursor/mcp.json` or `.vscode/mcp.json`:<br>```json<br>{ "servers": { "browser": { "command": "/absolute/path/.venv/bin/browser-mcp" } } }<br>``` |
 | **Any MCP client** | Point it at the `browser-mcp` binary, transport `stdio` |
 
-Private GitHub repo? `pip install git+https://github.com/amansahani/browser-mcp.git` works once you've authenticated git (e.g. `gh auth setup-git`) — or just clone and `./scripts/setup.sh`.
+You can also install directly from GitHub: `pip install git+https://github.com/amansahani/browser-mcp.git` (repo is public).
 
 ## Add the skill
 
