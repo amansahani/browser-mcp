@@ -1,0 +1,18 @@
+[project]
+name = "browser-mcp"
+version = "0.1.0"
+description = "Playwright-powered MCP server for AI-agent web browsing and search"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp>=1.0,<2",
+    "playwright>=1.62,<1.63",
+    "markdownify>=0.12",
+    "beautifulsoup4>=4.12",
+    "playwright-stealth>=2.0",
+]
+
+[tool.setuptools]
+py-modules = ["server"]
+
+[project.scripts]
+browser-mcp = "server:mcp.run"
